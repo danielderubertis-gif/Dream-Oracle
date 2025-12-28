@@ -4,15 +4,22 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dream Oracle — Share</title>
+
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- html2canvas (per “fotografare” il blocco e creare un PNG) -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
   <style>
     body{font-family:'Inter',sans-serif;background:#020617;color:#f1f5f9;min-height:100vh}
   </style>
 </head>
+
 <body class="flex items-center justify-center p-4">
   <div class="w-full max-w-md bg-slate-900/60 backdrop-blur-xl border border-slate-700/50 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden">
     <div class="p-6 border-b border-white/10 flex justify-between items-center">
@@ -22,10 +29,34 @@
       </div>
       <a href="./" class="text-slate-500 hover:text-white transition-colors text-xs font-mono">Home</a>
     </div>
-    <div id="content" class="p-6"></div>
+
+    <!-- Questo è il contenuto “visuale” che vogliamo trasformare in immagine -->
+    <div id="content" class="p-6">
+      <!-- injected -->
+    </div>
+
+    <!-- CTA share/download -->
+    <div class="px-6 pb-6 pt-2">
+      <div class="grid grid-cols-1 gap-3">
+        <button id="igShareBtn"
+          class="w-full py-4 rounded-xl font-bold text-sm tracking-widest uppercase bg-[#9b0aa5] hover:bg-white hover:text-[#9b0aa5] transition flex items-center justify-center gap-2">
+          <span id="igShareLabel">Condividi su Instagram</span>
+        </button>
+
+        <button id="downloadBtn"
+          class="w-full py-4 rounded-xl font-bold text-sm tracking-widest uppercase bg-slate-900 border border-slate-700 hover:border-white/30 transition">
+          Scarica immagine
+        </button>
+
+        <p id="hint" class="hidden text-[11px] text-slate-500 leading-relaxed">
+          Se non si apre il menu di condivisione, scarica l’immagine e poi condividila da Foto/Galleria su Instagram (Story o Post).
+        </p>
+      </div>
+    </div>
   </div>
 
   <script>
+    // --- Dati testo (come nel tuo file) ---
     const CARD_CONTENT = {
       EXPANSION:{real:"È un segnale concreto: c'è un'opportunità tangibile davanti a te. Non restare fermo, occupa questo nuovo spazio con azioni pratiche e decise. Più spazio dai alla curiosità, più possibilità emergono.",surreal:"Il sogno ti mostra un orizzonte senza confini. Lasciati scivolare in questo varco onirico dove la logica si sospende e l'impossibile diventa probabile. Stai entrando in una fase di apertura assoluta.",future:"Segnale electric: espansione del sistema rilevata. I tuoi parametri di crescita sono al massimo. Esegui l'upgrade e accedi al livello successivo. Più dati elabori, più possibilità emergono."},
       MOMENTUM:{real:"È un segnale concreto: hai preso il ritmo giusto nella vita di tutti i giorni. Non fermarti a riflettere troppo, agisci e basta. Quando inizi concretamente, tutto si muove con te.",surreal:"Nel sogno corri senza fatica verso una meta invisibile. Segui quella scia luminosa, è l'inerzia del tuo desiderio che ti trascina oltre il reale. Questo è il momento di continuare a sognare.",future:"Segnale electric: velocità di crociera raggiunta. I propulsori sono attivi. Mantieni la traiettoria e brucia le distanze. Il tuo momentum è inarrestabile."},
@@ -38,16 +69,18 @@
       TRANSFORMATION:{real:"È un segnale concreto: cambia look, cambia strada, cambia abitudine. È il momento pratico per dare un taglio netto al passato e assumere una nuova forma.",surreal:"Nel sogno sei una farfalla che rompe il bozzolo. La tua vecchia pelle cade a terra. Non aver paura di questa metamorfosi sacra, è un passaggio necessario.",future:"Segnale electric: aggiornamento firmware obbligatorio. Il vecchio codice viene sovrascritto. Riavvia il sistema per completare l'evoluzione digitale."}
     };
 
+    // --- Render contenuto (uguale al tuo, con piccolo wrapper per lo screenshot) ---
     const qs = new URLSearchParams(window.location.search);
     const card = (qs.get("card") || "").toUpperCase();
-    const loc = (qs.get("loc") || "");
+    const loc  = (qs.get("loc") || "");
     const vibe = (qs.get("vibe") || "");
-    const img = (qs.get("img") || "");
+    const img  = (qs.get("img") || "");
     const body = (CARD_CONTENT[card] && CARD_CONTENT[card][loc]) ? CARD_CONTENT[card][loc] : "";
 
     const el = document.getElementById("content");
     el.innerHTML = `
-      <div class="flex flex-col gap-5">
+      <!-- wrapper screenshot -->
+      <div id="share-capture" class="flex flex-col gap-5">
         <div class="flex justify-center">
           <div class="px-4 py-1.5 bg-slate-900/80 border border-slate-700 rounded-full flex items-center gap-3">
             <div class="w-2 h-2 rounded-full bg-[#3750dc] animate-pulse shadow-[0_0_10px_#3750dc]"></div>
@@ -57,7 +90,7 @@
 
         <div class="relative w-full aspect-[4/5] rounded-3xl bg-slate-800 shadow-2xl overflow-hidden border border-slate-700/50">
           ${img
-            ? `<img src="${img}" alt="${card}" class="w-full h-full object-cover"
+            ? `<img src="${img}" crossorigin="anonymous" alt="${card}" class="w-full h-full object-cover"
                  onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'flex items-center justify-center h-full text-slate-500 text-xs font-mono\\'>Image not found</div>'">`
             : `<div class="flex items-center justify-center h-full text-slate-500 text-xs font-mono">No image</div>`}
         </div>
@@ -74,6 +107,95 @@
     `;
 
     lucide.createIcons();
+
+    // --- Helpers ---
+    function setLoading(isLoading) {
+      const btn = document.getElementById("igShareBtn");
+      const lbl = document.getElementById("igShareLabel");
+      btn.disabled = isLoading;
+      btn.classList.toggle("opacity-70", isLoading);
+      btn.classList.toggle("cursor-not-allowed", isLoading);
+      lbl.textContent = isLoading ? "Preparazione..." : "Condividi su Instagram";
+    }
+
+    async function buildSharePngBlob() {
+      const node = document.getElementById("share-capture");
+
+      // Aspetta che l’immagine sia caricata (se presente)
+      const imgTag = node.querySelector("img");
+      if (imgTag && !imgTag.complete) {
+        await new Promise((resolve) => {
+          imgTag.onload = resolve;
+          imgTag.onerror = resolve;
+        });
+      }
+
+      // Render ad alta qualità (2x)
+      const canvas = await html2canvas(node, {
+        backgroundColor: null,
+        scale: Math.min(2, window.devicePixelRatio || 2),
+        useCORS: true
+      });
+
+      return await new Promise((resolve) => canvas.toBlob(resolve, "image/png", 0.95));
+    }
+
+    function downloadBlob(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    // --- Actions ---
+    document.getElementById("downloadBtn").addEventListener("click", async () => {
+      const hint = document.getElementById("hint");
+      try {
+        setLoading(true);
+        const blob = await buildSharePngBlob();
+        if (!blob) throw new Error("PNG build failed");
+        downloadBlob(blob, `DreamOracle-${card || "CARD"}.png`);
+      } catch (e) {
+        hint.classList.remove("hidden");
+        alert("Impossibile creare l’immagine. Riprova.");
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    document.getElementById("igShareBtn").addEventListener("click", async () => {
+      const hint = document.getElementById("hint");
+      try {
+        setLoading(true);
+        const blob = await buildSharePngBlob();
+        if (!blob) throw new Error("PNG build failed");
+
+        const file = new File([blob], `DreamOracle-${card || "CARD"}.png`, { type: "image/png" });
+
+        // Web Share API con file (mobile)
+        if (navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share) {
+          await navigator.share({
+            files: [file],
+            title: "Dream Oracle",
+            text: "La mia Dream Card ⚡"
+          });
+          return;
+        }
+
+        // Fallback: scarica e mostra hint
+        hint.classList.remove("hidden");
+        downloadBlob(blob, `DreamOracle-${card || "CARD"}.png`);
+      } catch (e) {
+        hint.classList.remove("hidden");
+        alert("Condivisione non disponibile qui. Usa 'Scarica immagine' e condividi da Foto/Galleria.");
+      } finally {
+        setLoading(false);
+      }
+    });
   </script>
 </body>
 </html>
