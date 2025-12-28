@@ -1,5 +1,6 @@
 export default async (req) => {
   try {
+    // Only POST
     if (req.method !== "POST") {
       return new Response("Method Not Allowed", { status: 405 });
     }
@@ -7,19 +8,30 @@ export default async (req) => {
     const { to, cardName, vibe, bodyText, cardImageUrl, shareUrl } = await req.json();
 
     if (!to || !cardName || !cardImageUrl) {
-      return new Response("Missing fields", { status: 400 });
+      return new Response(
+        JSON.stringify({ ok: false, error: "Missing fields: to, cardName, cardImageUrl" }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
     }
 
     const RESEND_API_KEY = process.env.RESEND_API_KEY;
-    const FROM_EMAIL = process.env.FROM_EMAIL;
-
-    if (!RESEND_API_KEY || !FROM_EMAIL) {
-      return new Response("Server not configured: missing env vars", { status: 500 });
+    if (!RESEND_API_KEY) {
+      return new Response(
+        JSON.stringify({ ok: false, error: "Missing RESEND_API_KEY env var" }),
+        { status: 500, headers: { "Content-Type": "application/json" } }
+      );
     }
 
+    // ✅ HARDCODED FROM for test (bypasses FROM_EMAIL env issues)
+    const FROM_EMAIL = "Dream Oracle <onboarding@resend.dev>";
+
+    // Fetch image (public URL) and attach
     const imgRes = await fetch(cardImageUrl);
     if (!imgRes.ok) {
-      return new Response(`Image fetch failed: ${imgRes.status}`, { status: 400 });
+      return new Response(
+        JSON.stringify({ ok: false, error: `Image fetch failed: ${imgRes.status}`, url: cardImageUrl }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
     }
 
     const buffer = Buffer.from(await imgRes.arrayBuffer());
@@ -38,38 +50,54 @@ export default async (req) => {
             <div style="margin:14px 0;height:1px;background:rgba(255,255,255,.12)"></div>
             <img src="${esc(cardImageUrl)}" alt="${esc(cardName)}" style="width:100%;border-radius:14px;border:1px solid rgba(255,255,255,.15)">
             <p style="margin-top:14px;font-size:16px;line-height:1.55;color:#f8fafc;font-style:italic">“${esc(bodyText || "")}”</p>
-            ${shareUrl ? `<p style="margin-top:14px"><a href="${esc(shareUrl)}" style="color:#e2e8f0;text-decoration:underline">Apri la tua card</a></p>` : ""}
+            ${
+              shareUrl
+                ? `<p style="margin-top:14px"><a href="${esc(shareUrl)}" style="color:#e2e8f0;text-decoration:underline">Apri la tua card</a></p>`
+                : ""
+            }
           </div>
         </div>
       </div>
     `;
 
+    const payload = {
+      from: FROM_EMAIL,
+      to: [to],
+      subject: `Dream Oracle — ${cardName} ⚡`,
+      html,
+      attachments: [{ filename: `${cardName}.jpg`, content: base64 }],
+    };
+
     const resendRes = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${RESEND_API_KEY}`,
+        Authorization: `Bearer ${RESEND_API_KEY}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        from: FROM_EMAIL,
-        to: [to],
-        subject: `Dream Oracle — ${cardName} ⚡`,
-        html,
-        attachments: [{ filename: `${cardName}.jpg`, content: base64 }],
-      }),
+      body: JSON.stringify(payload),
     });
 
     if (!resendRes.ok) {
       const t = await resendRes.text().catch(() => "");
-      return new Response(`Resend error: ${t}`, { status: 500 });
+      // Log useful debug in Netlify logs
+      console.error("Resend error:", resendRes.status, t);
+      return new Response(
+        JSON.stringify({ ok: false, error: "Resend error", status: resendRes.status, detail: t }),
+        { status: 500, headers: { "Content-Type": "application/json" } }
+      );
     }
 
-    return new Response(JSON.stringify({ ok: true }), {
+    const data = await resendRes.json().catch(() => ({}));
+    return new Response(JSON.stringify({ ok: true, resend: data }), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
   } catch (e) {
-    return new Response(`Server error: ${e?.message || e}`, { status: 500 });
+    console.error("Server error:", e);
+    return new Response(
+      JSON.stringify({ ok: false, error: `Server error: ${e?.message || e}` }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
   }
 };
 
@@ -78,7 +106,7 @@ function esc(s) {
     "&": "&amp;",
     "<": "&lt;",
     ">": "&gt;",
-    "\"": "&quot;",
+    '"': "&quot;",
     "'": "&#39;",
   }[c]));
 }
