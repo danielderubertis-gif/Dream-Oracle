@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dream Oracle</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color:#020617; color:#f1f5f9; perspective:1000px; }
+    ::-webkit-scrollbar{width:6px}
+    ::-webkit-scrollbar-track{background:rgba(15,23,42,.5)}
+    ::-webkit-scrollbar-thumb{background:rgba(148,163,184,.2);border-radius:10px}
+    ::-webkit-scrollbar-thumb:hover{background:rgba(148,163,184,.4)}
+    @keyframes float{0%{transform:translateY(0)}50%{transform:translateY(-10px)}100%{transform:translateY(0)}}
+    @keyframes pulse-glow{0%,100%{opacity:.5;transform:scale(1)}50%{opacity:1;transform:scale(1.1)}}
+    @keyframes scanline{0%{transform:translateY(-100%)}100%{transform:translateY(100%)}}
+    @keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+    @keyframes move-sphere-1{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(5vw,-5vh) scale(1.1)}66%{transform:translate(-5vw,10vh) scale(.9)}}
+    @keyframes move-sphere-2{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-10vw,5vh) scale(1.2)}}
+    @keyframes move-sphere-3{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(8vw,8vh) scale(.9)}}
+    @keyframes revealCard{0%{opacity:0;filter:blur(20px);transform:scale(.95) translateY(10px)}100%{opacity:1;filter:blur(0);transform:scale(1) translateY(0)}}
+    .reveal-card{animation:revealCard 3s cubic-bezier(.2,.8,.2,1) forwards;opacity:0}
+    .animate-float{animation:float 6s ease-in-out infinite}
+    .animate-pulse-glow{animation:pulse-glow 3s ease-in-out infinite}
+    .animate-sphere-1{animation:move-sphere-1 20s infinite ease-in-out alternate}
+    .animate-sphere-2{animation:move-sphere-2 25s infinite ease-in-out alternate}
+    .animate-sphere-3{animation:move-sphere-3 22s infinite ease-in-out alternate}
+    .scanline-container{position:relative;overflow-x:hidden;min-height:100vh}
+    .scanline-container::before{
+      content:"";display:block;position:absolute;inset:0;
+      background:linear-gradient(rgba(18,16,16,0) 50%, rgba(0,0,0,.25) 50%),
+               linear-gradient(90deg, rgba(255,0,0,.06), rgba(0,255,0,.02), rgba(0,0,255,.06));
+      z-index:2;background-size:100% 2px, 3px 100%;pointer-events:none
+    }
+    .scanline-bar{position:absolute;top:0;left:0;width:100%;height:5px;background:rgba(255,255,255,.1);animation:scanline 6s linear infinite;pointer-events:none;z-index:3;opacity:.5}
+    .shimmer-effect{position:absolute;inset:0;background:linear-gradient(to right, transparent 0%, rgba(255,255,255,.05) 50%, transparent 100%);transform:translateX(-100%);transition:transform .5s}
+    .group:hover .shimmer-effect{animation:shimmer 1.5s infinite}
+    .fade-in{animation:fadeIn .7s cubic-bezier(.4,0,.2,1) forwards;opacity:0}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  </style>
+</head>
+
+<body class="flex flex-col items-center justify-center min-h-screen selection:bg-[#9b0aa5] selection:text-white scanline-container">
+  <div class="scanline-bar"></div>
+  <div id="particles-container" class="absolute inset-0 overflow-hidden pointer-events-none z-0"></div>
+
+  <div class="fixed inset-0 overflow-hidden pointer-events-none z-0">
+    <div class="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] max-w-[600px] max-h-[600px] bg-[#9b0aa5]/30 rounded-full mix-blend-screen filter blur-[80px] opacity-40 animate-sphere-1"></div>
+    <div class="absolute top-[10%] right-[-10%] w-[60vw] h-[60vw] max-w-[500px] max-h-[500px] bg-[#3750dc]/30 rounded-full mix-blend-screen filter blur-[90px] opacity-40 animate-sphere-2"></div>
+    <div class="absolute bottom-[-15%] left-[20%] w-[70vw] h-[70vw] max-w-[700px] max-h-[700px] bg-[#2e008b]/30 rounded-full mix-blend-screen filter blur-[100px] opacity-40 animate-sphere-3"></div>
+    <div class="absolute top-[40%] left-[40%] w-[30vw] h-[30vw] max-w-[400px] max-h-[400px] bg-[#3750dc]/10 rounded-full mix-blend-screen filter blur-[60px] opacity-30 animate-pulse-glow" style="animation-duration:8s;"></div>
+  </div>
+
+  <div class="w-full max-w-md bg-slate-900/60 backdrop-blur-xl border border-slate-700/50 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] relative z-10 overflow-hidden min-h-[700px] flex flex-col transition-all duration-500 m-4">
+    <div class="p-6 border-b border-white/10 flex justify-between items-center shrink-0 z-20">
+      <div class="flex items-center gap-2 text-[#9b0aa5] group cursor-default">
+        <i data-lucide="zap" class="w-5 h-5 group-hover:text-[#3750dc] transition-colors"></i>
+        <span class="font-bold tracking-widest text-xs uppercase text-slate-300 group-hover:text-white transition-colors font-mono">IQOS</span>
+      </div>
+      <button id="reset-btn" onclick="app.reset()" class="hidden text-slate-500 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-full">
+        <i data-lucide="refresh-cw" class="w-4 h-4 hover:rotate-180 transition-transform duration-500"></i>
+      </button>
+    </div>
+
+    <div id="content-area" class="flex-1 flex flex-col p-6 relative overflow-y-auto custom-scrollbar"></div>
+  </div>
+
+  <script>
+    const STEP_1_LOCATIONS = [
+      { id:'real', label:'Luogo Reale', sub:'Riconoscibile, quotidiano', vibe:'Concreta', icon:'map-pin' },
+      { id:'surreal', label:'Luogo Sconfinato', sub:'Surreale, onirico', vibe:'Onirica', icon:'cloud' },
+      { id:'future', label:'Luogo Futuristico', sub:'Luce ed energia pura', vibe:'Elettrica', icon:'cpu' }
+    ];
+
+    const STEP_2_ACTIONS = [
+      { id:'open', label:'Qualcosa si apre', sub:'Nuovi spazi, porte, orizzonti', icon:'maximize-2' },
+      { id:'seek', label:'Cerchi qualcosa', sub:'Un oggetto, una persona, una risposta', icon:'compass' },
+      { id:'transform', label:'Tutto si trasforma', sub:'Cambio di forma, colore o stato', icon:'refresh-cw' }
+    ];
+
+    const STEP_3_FEELINGS = [
+      { id:'energy', label:'Carico di Energia', sub:'Vitalità, impulso, movimento', icon:'zap' },
+      { id:'balance', label:'In Equilibrio', sub:'Calma, stabilità, centro', icon:'scale' },
+      { id:'connection', label:'Connesso a qualcosa', sub:'Unione, empatia, appartenenza', icon:'git-merge' }
+    ];
+
+    const CARD_CONTENT = {
+      EXPANSION: {
+        real:"È un segnale concreto: c'è un'opportunità tangibile davanti a te. Non restare fermo, occupa questo nuovo spazio con azioni pratiche e decise. Più spazio dai alla curiosità, più possibilità emergono.",
+        surreal:"Il sogno ti mostra un orizzonte senza confini. Lasciati scivolare in questo varco onirico dove la logica si sospende e l'impossibile diventa probabile. Stai entrando in una fase di apertura assoluta.",
+        future:"Segnale electric: espansione del sistema rilevata. I tuoi parametri di crescita sono al massimo. Esegui l'upgrade e accedi al livello successivo. Più dati elabori, più possibilità emergono."
+      },
+      MOMENTUM: {
+        real:"È un segnale concreto: hai preso il ritmo giusto nella vita di tutti i giorni. Non fermarti a riflettere troppo, agisci e basta. Quando inizi concretamente, tutto si muove con te.",
+        surreal:"Nel sogno corri senza fatica verso una meta invisibile. Segui quella scia luminosa, è l'inerzia del tuo desiderio che ti trascina oltre il reale. Questo è il momento di continuare a sognare.",
+        future:"Segnale electric: velocità di crociera raggiunta. I propulsori sono attivi. Mantieni la traiettoria e brucia le distanze. Il tuo momentum è inarrestabile."
+      },
+      ENERGY: {
+        real:"È un segnale concreto: sentiti fisicamente pronto. Usa questa scarica di adrenalina per risolvere un problema pratico che ti trascinavi da tempo. Quando segui ciò che ti accende, tutto diventa più fluido.",
+        surreal:"Nel sogno sei pura luce vibrante. La tua forma si scioglie per diventare energia pura. Non contenerla, lasciala irradiare ovunque e trasforma il paesaggio onirico intorno a te.",
+        future:"Segnale electric: batteria al 100%. Il core del sistema è instabile ma potente. Canalizza l'output verso i tuoi obiettivi primari per una trasformazione immediata."
+      },
+      VISION: {
+        real:"È un segnale concreto: ora vedi le cose come stanno veramente. Hai la lucidità per pianificare i prossimi passi con precisione chirurgica. La direzione è chiara.",
+        surreal:"Il sogno apre il terzo occhio. Vedi oltre la nebbia della realtà. Fidati di quelle immagini sfocate, contengono la verità che cerchi prima ancora che si manifesti.",
+        future:"Segnale electric: scansione a lungo raggio completata. Il target è agganciato. La tua visione periferica è aumentata, nulla sfugge alla tua analisi predittiva."
+      },
+      FLOW: {
+        real:"È un segnale concreto: smetti di nuotare controcorrente. Le cose si risolveranno da sole se allenti la presa e ti rilassi. Lascia che le cose accadano con naturalezza.",
+        surreal:"Nel sogno galleggi in un fiume di stelle. Non c'è gravità, non c'è sforzo. Lasciati trasportare dalla corrente dell'inconscio verso destinazioni inattese.",
+        future:"Segnale electric: resistenza azzerata. I dati fluiscono senza colli di bottiglia. Entra in modalità stream e segui il flusso delle informazioni senza interferire."
+      },
+      BALANCE: {
+        real:"È un segnale concreto: metti ordine nel caos quotidiano. Trova un compromesso tra dovere e piacere per ritrovare la stabilità. L’equilibrio nasce dal ritmo giusto.",
+        surreal:"Il sogno è un funambolo sospeso nel vuoto. Sei perfettamente immobile nel centro del ciclone. Respira questa quiete assoluta mentre tutto intorno a te muta.",
+        future:"Segnale electric: giroscopi stabilizzati. L'assetto è perfetto. Il sistema ha raggiunto l'omeostasi ottimale per operare al massimo dell'efficienza."
+      },
+      DISCOVERY: {
+        real:"È un segnale concreto: c'è una novità dietro l'angolo. Tieni gli occhi aperti domani, un piccolo dettaglio potrebbe cambiarti la giornata. Avvicinati senza aspettative.",
+        surreal:"Nel sogno trovi una chiave sconosciuta. Apri quella porta segreta della tua mente. C'è una meraviglia dimenticata che ti aspetta dall'altra parte.",
+        future:"Segnale electric: nuova tech scoperta. Un archivio criptato è stato sbloccato. Accedi subito ai nuovi dati disponibili per espandere il tuo database."
+      },
+      CONNECTION: {
+        real:"È un segnale concreto: chiama quella persona. Il contatto umano è la risorsa che ti manca in questo momento. Ogni incontro genera nuova energia vitale.",
+        surreal:"Nel sogno fili d'argento ti legano agli altri. Senti i pensieri di chi ami prima che parlino. Siamo tutti parte di un'unica rete onirica che pulsa all'unisono.",
+        future:"Segnale electric: uplink stabilito. La rete neurale è sincronizzata. Condividi il tuo bandwidth con altri nodi per potenziare il segnale collettivo."
+      },
+      TRANSFORMATION: {
+        real:"È un segnale concreto: cambia look, cambia strada, cambia abitudine. È il momento pratico per dare un taglio netto al passato e assumere una nuova forma.",
+        surreal:"Nel sogno sei una farfalla che rompe il bozzolo. La tua vecchia pelle cade a terra. Non aver paura di questa metamorfosi sacra, è un passaggio necessario.",
+        future:"Segnale electric: aggiornamento firmware obbligatorio. Il vecchio codice viene sovrascritto. Riavvia il sistema per completare l'evoluzione digitale."
+      }
+    };
+
+    function buildShareUrl(result, locationId, actionId, feelingId) {
+      const filename = result.cardName.charAt(0) + result.cardName.slice(1).toLowerCase() + '.jpg';
+      const base = new URL("share.html", window.location.href);
+      base.searchParams.set("card", result.cardName);
+      base.searchParams.set("loc", locationId);
+      base.searchParams.set("act", actionId);
+      base.searchParams.set("feel", feelingId);
+      base.searchParams.set("vibe", result.vibe);
+      base.searchParams.set("img", `cards/${filename}`);
+      return base.toString();
+    }
+
+    async function sendViaNetlifyFunction(payload) {
+      const res = await fetch("/.netlify/functions/send-card-email", {
+        method: "POST",
+        headers: { "Content-Type":"application/json" },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) {
+        const txt = await res.text().catch(() => "");
+        throw new Error(`Function error ${res.status}: ${txt}`);
+      }
+      return res.json().catch(() => ({}));
+    }
+
+    class DreamOracle {
+      constructor() {
+        this.phase = 'intro';
+        this.answers = [];
+        this.container = document.getElementById('content-area');
+        this.resetBtn = document.getElementById('reset-btn');
+        this.initParticles();
+        this.render();
+      }
+
+      initParticles() {
+        const container = document.getElementById('particles-container');
+        container.innerHTML = '';
+        for (let i = 0; i < 35; i++) {
+          const p = document.createElement('div');
+          p.className = 'absolute rounded-full bg-white opacity-20 animate-float';
+          p.style.top = `${Math.random() * 100}%`;
+          p.style.left = `${Math.random() * 100}%`;
+          const size = Math.random() * 3 + 1;
+          p.style.width = `${size}px`;
+          p.style.height = `${size}px`;
+          p.style.animationDuration = `${Math.random() * 8 + 4}s`;
+          p.style.animationDelay = `${Math.random() * 5}s`;
+          container.appendChild(p);
+        }
+      }
+
+      transitionTo(phase) { this.phase = phase; this.render(); }
+
+      handleStep(value) {
+        this.answers.push(value);
+        setTimeout(() => {
+          if (this.phase === 'step1') this.transitionTo('step2');
+          else if (this.phase === 'step2') this.transitionTo('step3');
+          else if (this.phase === 'step3') this.startProcessing();
+        }, 250);
+      }
+
+      startProcessing() {
+        this.transitionTo('processing');
+        setTimeout(() => this.transitionTo('outcome'), 2500);
+      }
+
+      calculateOutcome() {
+        const [locationId, actionId, feelingId] = this.answers;
+        let cardName = "";
+
+        if (feelingId === 'energy') {
+          if (actionId === 'open') cardName='EXPANSION';
+          else if (actionId === 'seek') cardName='MOMENTUM';
+          else cardName='ENERGY';
+        } else if (feelingId === 'balance') {
+          if (actionId === 'open') cardName='VISION';
+          else if (actionId === 'seek') cardName='FLOW';
+          else cardName='BALANCE';
+        } else {
+          if (actionId === 'open') cardName='DISCOVERY';
+          else if (actionId === 'seek') cardName='CONNECTION';
+          else cardName='TRANSFORMATION';
+        }
+
+        const fullText = CARD_CONTENT[cardName][locationId];
+        const locationData = STEP_1_LOCATIONS.find(l => l.id === locationId);
+
+        return { cardName, body: fullText, vibe: locationData.vibe };
+      }
+
+      async sendEmail() {
+        const emailInput = document.getElementById('user-email');
+        const successMsg = document.getElementById('email-success');
+        const formContainer = document.getElementById('email-form-container');
+
+        const email = (emailInput.value || "").trim();
+        if (!email || !email.includes('@')) {
+          emailInput.classList.add('border-red-500');
+          setTimeout(() => emailInput.classList.remove('border-red-500'), 1000);
+          return;
+        }
+
+        const btn = formContainer.querySelector('button');
+        const oldBtnHTML = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<div class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>';
+
+        try {
+          const result = this.calculateOutcome();
+          const [locationId, actionId, feelingId] = this.answers;
+
+          const filename = result.cardName.charAt(0) + result.cardName.slice(1).toLowerCase() + ".jpg";
+          const cardImageUrl = new URL(`cards/${filename}`, window.location.href).toString();
+          const shareUrl = buildShareUrl(result, locationId, actionId, feelingId);
+
+          await sendViaNetlifyFunction({
+            to: email,
+            cardName: result.cardName,
+            vibe: result.vibe,
+            bodyText: result.body,
+            cardImageUrl,
+            shareUrl
+          });
+
+          formContainer.classList.add('hidden');
+          successMsg.classList.remove('hidden');
+
+          // link utile in demo
+          successMsg.insertAdjacentHTML(
+            'beforeend',
+            `<a href="${shareUrl}" target="_blank" class="mt-3 inline-block text-[10px] uppercase tracking-widest text-slate-300 hover:text-white underline">Apri la tua card</a>`
+          );
+
+        } catch (err) {
+          console.error(err);
+          btn.disabled = false;
+          btn.innerHTML = oldBtnHTML;
+          alert("Invio non riuscito. Apri console / Function logs su Netlify.");
+        }
+      }
+
+      reset() { this.answers = []; this.transitionTo('intro'); }
+
+      render() {
+        this.container.innerHTML = '';
+        if (this.phase === 'intro') this.resetBtn.classList.add('hidden');
+        else this.resetBtn.classList.remove('hidden');
+
+        switch(this.phase) {
+          case 'intro': this.renderIntro(); break;
+          case 'step1': this.renderStep(STEP_1_LOCATIONS, 1, 'Dove sei nel sogno?'); break;
+          case 'step2': this.renderStep(STEP_2_ACTIONS, 2, 'Cosa succede?'); break;
+          case 'step3': this.renderStep(STEP_3_FEELINGS, 3, 'Come finisce?'); break;
+          case 'processing': this.renderProcessing(); break;
+          case 'outcome': this.renderOutcome(); break;
+        }
+
+        lucide.createIcons();
+      }
+
+      renderIntro() {
+        this.container.innerHTML = `
+          <div class="flex-1 flex flex-col items-center justify-center text-center space-y-10 fade-in h-full">
+            <div class="relative group cursor-pointer">
+              <div class="absolute inset-0 bg-[#9b0aa5]/20 rounded-full blur-[40px] opacity-40 group-hover:opacity-60 transition-opacity duration-500"></div>
+              <div class="relative w-28 h-28 bg-slate-800 rounded-full flex items-center justify-center border border-white/20 shadow-2xl group-hover:scale-105 transition-transform duration-500">
+                <i data-lucide="moon" class="w-12 h-12 text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.5)] animate-float"></i>
+              </div>
+            </div>
+
+            <div class="space-y-4 max-w-xs mx-auto">
+              <h1 class="text-4xl font-black text-white tracking-tight leading-none">DREAM ORACLE</h1>
+              <p class="text-slate-400 text-sm leading-relaxed tracking-wide">
+                Immagina un sogno ora,<br/><span class="text-white">come se stesse iniziando adesso.</span>
+              </p>
+            </div>
+
+            <div class="flex flex-col w-full max-w-[260px] gap-4 pt-4">
+              <button onclick="app.transitionTo('step1')"
+                class="group relative px-8 py-5 bg-[#581c87] text-white font-bold rounded-xl overflow-hidden transition-all hover:scale-[1.02] active:scale-[0.98] shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:shadow-[0_0_50px_rgba(255,255,255,0.3)] hover:bg-white hover:text-black">
+                <span class="relative z-10 flex items-center justify-center gap-2 tracking-widest text-xs uppercase">
+                  Avvia Sequenza <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </span>
+              </button>
+            </div>
+          </div>
+        `;
+      }
+
+      renderStep(options, stepNum, title) {
+        const subTitleMap = { 1:'Location', 2:'Action', 3:'Resonance' };
+        let subText = "";
+        if (stepNum === 1) subText = "Scegli d’istinto: è l’atmosfera del sogno.";
+        else if (stepNum === 2) subText = "Scegli l’azione che ti somiglia di più.";
+        else subText = "Quando ti svegli… qual è la sensazione che resta?";
+
+        const buttonsHtml = options.map(opt => `
+          <button onclick="app.handleStep('${opt.id}')"
+            class="relative overflow-hidden p-6 rounded-2xl bg-slate-800/60 border border-slate-700 hover:border-slate-500 transition-all group text-left shadow-lg active:scale-[0.98]">
+            <div class="shimmer-effect"></div>
+            <div class="absolute inset-0 bg-gradient-to-r from-[#2e008b]/40 to-[#9b0aa5]/40 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <div class="relative z-10 flex items-center justify-between">
+              <div class="flex items-center gap-5">
+                <div class="p-3 rounded-xl bg-slate-950/50 text-slate-400 group-hover:text-white group-hover:scale-110 transition-all duration-300 shadow-inner">
+                  <i data-lucide="${opt.icon}" class="w-6 h-6"></i>
+                </div>
+                <div>
+                  <span class="font-bold text-lg text-slate-200 group-hover:text-white transition-colors block">${opt.label}</span>
+                  ${opt.sub ? `<span class="text-xs text-slate-500 group-hover:text-slate-300 transition-colors mt-1 block">${opt.sub}</span>` : ''}
+                </div>
+              </div>
+              <i data-lucide="arrow-right" class="opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 text-white/50 w-5 h-5"></i>
+            </div>
+          </button>
+        `).join('');
+
+        this.container.innerHTML = `
+          <div class="flex-1 flex flex-col fade-in">
+            <div class="mb-8 relative pl-4 border-l-2 border-slate-600">
+              <span class="text-[10px] font-mono text-slate-400 uppercase tracking-widest">
+                Step 0${stepNum} /// ${subTitleMap[stepNum]}
+              </span>
+              <h2 class="text-3xl font-black mt-2 text-white leading-tight cursor-default">${title}</h2>
+              <p class="text-sm text-slate-400 italic mt-2">${subText}</p>
+            </div>
+            <div class="flex-1 grid grid-cols-1 gap-4">${buttonsHtml}</div>
+          </div>
+        `;
+      }
+
+      renderProcessing() {
+        this.container.innerHTML = `
+          <div class="flex-1 flex flex-col items-center justify-center text-center space-y-8 fade-in h-full">
+            <div class="relative w-32 h-32">
+              <div class="absolute inset-0 rounded-full border-2 border-slate-800"></div>
+              <div class="absolute inset-0 rounded-full border-t-2 border-[#9b0aa5] animate-spin"></div>
+              <div class="absolute inset-2 rounded-full border-r-2 border-[#3750dc] animate-spin" style="animation-direction: reverse; animation-duration: 1.5s;"></div>
+              <div class="absolute inset-0 flex items-center justify-center">
+                <i data-lucide="sparkles" class="text-white animate-pulse-glow w-8 h-8"></i>
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <h2 class="text-2xl font-black text-white uppercase tracking-widest">SINTONIZZAZIONE...</h2>
+              <p class="text-xs font-mono text-slate-500">Analisi vettoriale in corso</p>
+            </div>
+          </div>
+        `;
+      }
+
+      renderOutcome() {
+        const result = this.calculateOutcome();
+        const filename = result.cardName.charAt(0) + result.cardName.slice(1).toLowerCase() + '.jpg';
+        const imagePath = `cards/${filename}`;
+
+        this.container.innerHTML = `
+          <div class="flex-1 flex flex-col fade-in relative overflow-y-auto pt-4 pb-8">
+            <div class="flex justify-center mb-6">
+              <div class="px-4 py-1.5 bg-slate-900/80 border border-slate-700 rounded-full flex items-center gap-3 shadow-[0_0_20px_rgba(0,0,0,0.5)]">
+                <div class="w-2 h-2 rounded-full bg-[#3750dc] animate-pulse shadow-[0_0_10px_#3750dc]"></div>
+                <span class="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-300">Frequenza: ${result.vibe}</span>
+              </div>
+            </div>
+
+            <div class="reveal-card relative w-full aspect-[4/5] rounded-3xl bg-slate-800 shadow-2xl mb-6 group overflow-hidden border border-slate-700/50">
+              <img src="${imagePath}" alt="${result.cardName}" class="w-full h-full object-cover"
+                onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'flex flex-col items-center justify-center h-full text-slate-500 text-xs font-mono p-4 text-center\\'><span>Image not found</span><br><span class=\\'text-slate-600 mt-2\\'>${imagePath}</span></div>'">
+            </div>
+
+            <div class="relative z-10 w-full text-center space-y-4 mb-8">
+              <div class="flex flex-col items-center">
+                <span class="text-xs font-bold uppercase tracking-widest text-[#9b0aa5] mb-2">ELECTRIC DREAM</span>
+                <h2 class="text-4xl font-black text-white tracking-tighter uppercase">${result.cardName}</h2>
+              </div>
+              <div class="h-px w-20 mx-auto bg-white/20"></div>
+              <p class="text-lg leading-relaxed text-white font-light italic">"${result.body}"</p>
+            </div>
+
+            <div class="w-full max-w-[320px] mx-auto mb-8 p-1">
+              <div class="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-5 text-center backdrop-blur-sm">
+                <div id="email-form-container">
+                  <h3 class="text-[10px] font-bold text-slate-300 uppercase tracking-widest mb-3">Ricevi la tua card via email</h3>
+                  <div class="flex gap-2">
+                    <input type="email" id="user-email" placeholder="La tua email"
+                      class="w-full bg-slate-900/80 border border-slate-600 focus:border-[#9b0aa5] rounded-lg px-3 py-2 text-xs text-white placeholder:text-slate-500 outline-none transition-colors">
+                    <button onclick="app.sendEmail()"
+                      class="bg-[#9b0aa5] hover:bg-white hover:text-[#9b0aa5] text-white p-2 rounded-lg transition-all flex-shrink-0 group">
+                      <i data-lucide="send" class="w-4 h-4 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-transform"></i>
+                    </button>
+                  </div>
+                  <p class="text-[10px] text-slate-500 mt-3 leading-relaxed">Inserisci la tua mail e ricevi la Dream Card.</p>
+                </div>
+
+                <div id="email-success" class="hidden py-1">
+                  <div class="flex flex-col items-center gap-2 text-green-400">
+                    <div class="p-2 bg-green-400/10 rounded-full">
+                      <i data-lucide="check" class="w-5 h-5"></i>
+                    </div>
+                    <span class="text-xs font-mono uppercase tracking-widest">Inviato</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="text-center pb-2">
+              <button onclick="app.reset()" class="group relative px-8 py-3 rounded-full bg-slate-900 border border-slate-700 hover:border-white/30 transition-all overflow-hidden inline-block">
+                <span class="relative text-xs font-bold uppercase tracking-widest text-slate-300 group-hover:text-white flex items-center gap-2">
+                  <i data-lucide="refresh-cw" class="w-3 h-3 group-hover:rotate-180 transition-transform duration-500"></i> Nuova Interpretazione
+                </span>
+              </button>
+            </div>
+          </div>
+        `;
+
+        lucide.createIcons();
+      }
+    }
+
+    const app = new DreamOracle();
+  </script>
+</body>
+</html>
