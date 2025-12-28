@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dream Oracle — Share</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body{font-family:'Inter',sans-serif;background:#020617;color:#f1f5f9;min-height:100vh}
+  </style>
+</head>
+<body class="flex items-center justify-center p-4">
+  <div class="w-full max-w-md bg-slate-900/60 backdrop-blur-xl border border-slate-700/50 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden">
+    <div class="p-6 border-b border-white/10 flex justify-between items-center">
+      <div class="flex items-center gap-2 text-[#9b0aa5]">
+        <i data-lucide="zap" class="w-5 h-5"></i>
+        <span class="font-bold tracking-widest text-xs uppercase text-slate-300 font-mono">IQOS</span>
+      </div>
+      <a href="./" class="text-slate-500 hover:text-white transition-colors text-xs font-mono">Home</a>
+    </div>
+    <div id="content" class="p-6"></div>
+  </div>
+
+  <script>
+    const CARD_CONTENT = {
+      EXPANSION:{real:"È un segnale concreto: c'è un'opportunità tangibile davanti a te. Non restare fermo, occupa questo nuovo spazio con azioni pratiche e decise. Più spazio dai alla curiosità, più possibilità emergono.",surreal:"Il sogno ti mostra un orizzonte senza confini. Lasciati scivolare in questo varco onirico dove la logica si sospende e l'impossibile diventa probabile. Stai entrando in una fase di apertura assoluta.",future:"Segnale electric: espansione del sistema rilevata. I tuoi parametri di crescita sono al massimo. Esegui l'upgrade e accedi al livello successivo. Più dati elabori, più possibilità emergono."},
+      MOMENTUM:{real:"È un segnale concreto: hai preso il ritmo giusto nella vita di tutti i giorni. Non fermarti a riflettere troppo, agisci e basta. Quando inizi concretamente, tutto si muove con te.",surreal:"Nel sogno corri senza fatica verso una meta invisibile. Segui quella scia luminosa, è l'inerzia del tuo desiderio che ti trascina oltre il reale. Questo è il momento di continuare a sognare.",future:"Segnale electric: velocità di crociera raggiunta. I propulsori sono attivi. Mantieni la traiettoria e brucia le distanze. Il tuo momentum è inarrestabile."},
+      ENERGY:{real:"È un segnale concreto: sentiti fisicamente pronto. Usa questa scarica di adrenalina per risolvere un problema pratico che ti trascinavi da tempo. Quando segui ciò che ti accende, tutto diventa più fluido.",surreal:"Nel sogno sei pura luce vibrante. La tua forma si scioglie per diventare energia pura. Non contenerla, lasciala irradiare ovunque e trasforma il paesaggio onirico intorno a te.",future:"Segnale electric: batteria al 100%. Il core del sistema è instabile ma potente. Canalizza l'output verso i tuoi obiettivi primari per una trasformazione immediata."},
+      VISION:{real:"È un segnale concreto: ora vedi le cose come stanno veramente. Hai la lucidità per pianificare i prossimi passi con precisione chirurgica. La direzione è chiara.",surreal:"Il sogno apre il terzo occhio. Vedi oltre la nebbia della realtà. Fidati di quelle immagini sfocate, contengono la verità che cerchi prima ancora che si manifesti.",future:"Segnale electric: scansione a lungo raggio completata. Il target è agganciato. La tua visione periferica è aumentata, nulla sfugge alla tua analisi predittiva."},
+      FLOW:{real:"È un segnale concreto: smetti di nuotare controcorrente. Le cose si risolveranno da sole se allenti la presa e ti rilassi. Lascia che le cose accadano con naturalezza.",surreal:"Nel sogno galleggi in un fiume di stelle. Non c'è gravità, non c'è sforzo. Lasciati trasportare dalla corrente dell'inconscio verso destinazioni inattese.",future:"Segnale electric: resistenza azzerata. I dati fluiscono senza colli di bottiglia. Entra in modalità stream e segui il flusso delle informazioni senza interferire."},
+      BALANCE:{real:"È un segnale concreto: metti ordine nel caos quotidiano. Trova un compromesso tra dovere e piacere per ritrovare la stabilità. L’equilibrio nasce dal ritmo giusto.",surreal:"Il sogno è un funambolo sospeso nel vuoto. Sei perfettamente immobile nel centro del ciclone. Respira questa quiete assoluta mentre tutto intorno a te muta.",future:"Segnale electric: giroscopi stabilizzati. L'assetto è perfetto. Il sistema ha raggiunto l'omeostasi ottimale per operare al massimo dell'efficienza."},
+      DISCOVERY:{real:"È un segnale concreto: c'è una novità dietro l'angolo. Tieni gli occhi aperti domani, un piccolo dettaglio potrebbe cambiarti la giornata. Avvicinati senza aspettative.",surreal:"Nel sogno trovi una chiave sconosciuta. Apri quella porta segreta della tua mente. C'è una meraviglia dimenticata che ti aspetta dall'altra parte.",future:"Segnale electric: nuova tech scoperta. Un archivio criptato è stato sbloccato. Accedi subito ai nuovi dati disponibili per espandere il tuo database."},
+      CONNECTION:{real:"È un segnale concreto: chiama quella persona. Il contatto umano è la risorsa che ti manca in questo momento. Ogni incontro genera nuova energia vitale.",surreal:"Nel sogno fili d'argento ti legano agli altri. Senti i pensieri di chi ami prima che parlino. Siamo tutti parte di un'unica rete onirica che pulsa all'unisono.",future:"Segnale electric: uplink stabilito. La rete neurale è sincronizzata. Condividi il tuo bandwidth con altri nodi per potenziare il segnale collettivo."},
+      TRANSFORMATION:{real:"È un segnale concreto: cambia look, cambia strada, cambia abitudine. È il momento pratico per dare un taglio netto al passato e assumere una nuova forma.",surreal:"Nel sogno sei una farfalla che rompe il bozzolo. La tua vecchia pelle cade a terra. Non aver paura di questa metamorfosi sacra, è un passaggio necessario.",future:"Segnale electric: aggiornamento firmware obbligatorio. Il vecchio codice viene sovrascritto. Riavvia il sistema per completare l'evoluzione digitale."}
+    };
+
+    const qs = new URLSearchParams(window.location.search);
+    const card = (qs.get("card") || "").toUpperCase();
+    const loc = (qs.get("loc") || "");
+    const vibe = (qs.get("vibe") || "");
+    const img = (qs.get("img") || "");
+    const body = (CARD_CONTENT[card] && CARD_CONTENT[card][loc]) ? CARD_CONTENT[card][loc] : "";
+
+    const el = document.getElementById("content");
+    el.innerHTML = `
+      <div class="flex flex-col gap-5">
+        <div class="flex justify-center">
+          <div class="px-4 py-1.5 bg-slate-900/80 border border-slate-700 rounded-full flex items-center gap-3">
+            <div class="w-2 h-2 rounded-full bg-[#3750dc] animate-pulse shadow-[0_0_10px_#3750dc]"></div>
+            <span class="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-300">Frequenza: ${vibe || "-"}</span>
+          </div>
+        </div>
+
+        <div class="relative w-full aspect-[4/5] rounded-3xl bg-slate-800 shadow-2xl overflow-hidden border border-slate-700/50">
+          ${img
+            ? `<img src="${img}" alt="${card}" class="w-full h-full object-cover"
+                 onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'flex items-center justify-center h-full text-slate-500 text-xs font-mono\\'>Image not found</div>'">`
+            : `<div class="flex items-center justify-center h-full text-slate-500 text-xs font-mono">No image</div>`}
+        </div>
+
+        <div class="text-center space-y-4">
+          <div class="flex flex-col items-center">
+            <span class="text-xs font-bold uppercase tracking-widest text-[#9b0aa5] mb-2">ELECTRIC DREAM</span>
+            <h2 class="text-4xl font-black text-white tracking-tighter uppercase">${card || "CARD"}</h2>
+          </div>
+          <div class="h-px w-20 mx-auto bg-white/20"></div>
+          <p class="text-lg leading-relaxed text-white font-light italic">“${body || "Testo non disponibile"}”</p>
+        </div>
+      </div>
+    `;
+
+    lucide.createIcons();
+  </script>
+</body>
+</html>
